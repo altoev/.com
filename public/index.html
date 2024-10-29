@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Altoev</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="icon" href="images/favicon.ico">
+    <style>
+        /* Announcement Banner Styles */
+        .announcement-banner {
+            background-color: #d9534f; /* Red color for the banner */
+            color: #fff; /* White text for good contrast */
+            text-align: center;
+            padding: 10px 0; /* Padding to give enough vertical space */
+            font-weight: bold;
+            font-size: 1rem;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000; /* Ensure it stays above other content */
+        }
+        .announcement-banner a {
+            color: #fff;
+            text-decoration: underline;
+            transition: color 0.3s;
+        }
+        .announcement-banner a:visited,
+        .announcement-banner a:active,
+        .announcement-banner a:hover {
+            color: #fff;
+        }
+
+        /* Adjust body padding for banner and nav */
+        body {
+            margin: 0;
+            padding-top: 100px; /* Adjust padding to accommodate the fixed announcement and nav */
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+        }
+
+        /* Navigation Bar Fix */
+        .nav-bar {
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: fixed;
+            top: 40px; /* Make it sit right below the announcement banner */
+            width: 100%;
+            z-index: 999; /* Below the announcement banner */
+        }
+
+        /* "Why Choose Us" Section Styling */
+        .why-choose-us {
+            margin: 60px auto;
+            text-align: center;
+            padding: 20px;
+            max-width: 900px;
+        }
+
+        .why-choose-us p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .learn-more-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #000;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            display: inline-block;
+        }
+
+        .learn-more-button:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Announcement Banner -->
+    <div class="announcement-banner">
+        5% off with code 5OFF at checkout! - <a href="5offterms">Terms & Conditions</a>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="nav-bar">
+            <div class="logo">
+                <button onclick="window.location.href='/'" style="background: none; border: none; cursor: pointer;">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="book">Book Now</a></li>
+                <li><a href="about">About Us</a></li>
+                <li><a href="contact">Contact</a></li>
+                <li><a href="login">Login</a></li>
+                <li><a href="register">Register</a></li>
+            </ul>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Experience the Future of Car Rentals</h1>
+            <p>Drive electric with ease. Flexible, premium, and environmentally friendly options for your next journey.</p>
+            <a href="book.html" class="cta-button">Book Now</a>
+        </div>
+    </section>
+
+    <!-- Featured Vehicles -->
+    <section class="featured-vehicles">
+        <h2>Our Premium Fleet</h2>
+        <div class="vehicle-grid">
+            <div class="vehicle">
+                <img src="images/model3.jpeg" alt="Tesla Model 3">
+                <h3>Tesla Model 3</h3>
+                <p>Refreshed | 310 miles range</p>
+                <a href="book.html" class="details-button">Book</a>
+            </div>
+            <div class="vehicle">
+                <img src="images/modely.jpeg" alt="Tesla Model Y">
+                <h3>Tesla Model Y</h3>
+                <p>Performance | 303 miles range</p>
+                <a href="book.html" class="details-button">Book</a>
+            </div>
+            <div class="vehicle">
+                <img src="images/models.jpeg" alt="Tesla Model S">
+                <h3>Tesla Model S</h3>
+                <p>Long Range | 405 miles range</p>
+                <a href="book.html" class="details-button">Book</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us Section -->
+    <section class="why-choose-us">
+        <h2>Why Choose Altoev?</h2>
+        <p>At Altoev, we provide all-electric vehicles that reduce your carbon footprint while delivering a premium rental experience. Enjoy transparent pricing, customer-centric service, and a convenient rental process that fits your needs.</p>
+        <a href="about.html" class="learn-more-button">Learn More</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content" style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 20px;">
+            <div class="footer-logo">
+                <a href="/">
+                    <img src="images/logo.png" alt="Altoev Logo" style="width: 120px;">
+                </a>
+            </div>
+            <div class="footer-links">
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; gap: 40px;">
+                    <li><a href="terms.html" style="color: #fff; text-decoration: none; transition: color 0.3s;">Terms of Service</a></li>
+                    <li><a href="privacy.html" style="color: #fff; text-decoration: none; transition: color 0.3s;">Privacy Policy</a></li>
+                    <li><a href="contact.html" style="color: #fff; text-decoration: none; transition: color 0.3s;">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom" style="margin-top: 20px; font-size: 0.9rem; text-align: center; padding-bottom: 20px;">
+            <p>&copy; 2024 Altoev, Inc. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+    
+</body>
+</html>

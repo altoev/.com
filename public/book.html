@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Ride | Altoev</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="icon" href="images/favicon.ico">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* CSS Code for Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .content-wrapper {
+            max-width: 900px;
+            margin: 120px auto;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content {
+            flex: 3;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .summary-content {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            background: linear-gradient(135deg, #eceff1, #ffffff);
+        }
+
+        .summary-content img {
+            width: 100%;
+            max-width: 150px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+        }
+
+        .step-container {
+            display: none;
+            padding: 10px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .step-container.active {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .nav-buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .button {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .button:disabled {
+            background-color: #d3d3d3;
+            cursor: not-allowed;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        textarea {
+            padding: 8px;
+            font-size: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .vehicle-selection {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .vehicle-option {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border 0.3s, box-shadow 0.3s;
+            background-color: #fff;
+            max-width: 200px;
+            text-align: center;
+        }
+
+        .vehicle-option:hover {
+            border: 1px solid #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+        }
+
+        .vehicle-option.selected {
+            border: 2px solid #007bff;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+        }
+
+        .addon-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .addon-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border 0.3s, box-shadow 0.3s;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .addon-option:hover {
+            border: 1px solid #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+        }
+
+        .addon-option.selected {
+            border: 2px solid #007bff;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+        }
+
+        .info-bubble {
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            position: absolute;
+            right: 10px;
+        }
+
+        .summary-content h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .summary-details p {
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .details-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        h3 {
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://cdn.usecanopy.com/v2/embed.js" async></script>
+
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="nav-bar">
+            <div class="logo">
+                <button onclick="window.location.href='/'" style="background: none; border: none; cursor: pointer;">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="book.html">Book Now</a></li>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Booking Steps -->
+    <div class="content-wrapper">
+        <div class="main-content">
+            <h1>Book Your Ride</h1>
+            <!-- Step 1: Select Dates & Times -->
+            <div id="step-1" class="step-container active">
+                <h2>Step 1: Select Dates & Times</h2>
+                <label>Start Date & Time:</label>
+                <input type="text" id="start-date" class="flatpickr" required>
+                <label>End Date & Time:</label>
+                <input type="text" id="end-date" class="flatpickr" required>
+            </div>
+
+            <!-- Step 2: Choose Vehicle -->
+            <div id="step-2" class="step-container">
+                <h2>Step 2: Choose Vehicle</h2>
+                <div class="vehicle-selection">
+                    <div class="vehicle-option" data-vehicle="Model 3" data-price="69">
+                        <img src="images/model3.jpeg" alt="Tesla Model 3" style="width: 100%; max-width: 150px;">
+                        <h3>Tesla Model 3</h3>
+                        <p>$69/day</p>
+                    </div>
+                    <div class="vehicle-option" data-vehicle="Model Y" data-price="99">
+                        <img src="images/modely.jpeg" alt="Tesla Model Y" style="width: 100%; max-width: 150px;">
+                        <h3>Tesla Model Y</h3>
+                        <p>$99/day</p>
+                    </div>
+                    <div class="vehicle-option" data-vehicle="Model S" data-price="139">
+                        <img src="images/models.jpeg" alt="Tesla Model S" style="width: 100%; max-width: 150px;">
+                        <h3>Tesla Model S</h3>
+                        <p>$139/day</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Choose Protection Plans & Add-ons -->
+            <div id="step-3" class="step-container">
+                <h2>Step 3: Choose Protection Plans & Add-ons</h2>
+                <div class="addon-section">
+                    <div class="addon-option" data-addon="SLI" data-price="29.99" data-daily="true">
+                        <h3>Supplemental Liability Insurance (SLI)</h3>
+                        <p style="margin-right: 30px;">$29.99/day</p>
+                        <div class="info-bubble" onclick="showInfoPopup('SLI')">i</div>
+                    </div>
+                    <div class="addon-option" data-addon="SPDW" data-price="49.99" data-daily="true">
+                        <h3>Supplemental Physical Damage Warranty (SPDW)</h3>
+                        <p style="margin-right: 30px;">$49.99/day</p>
+                        <div class="info-bubble" onclick="showInfoPopup('SPDW')">i</div>
+                    </div>
+                    <div class="addon-option" data-addon="PEI" data-price="9.99" data-daily="true">
+                        <h3>Personal Effects Insurance (PEI)</h3>
+                        <p style="margin-right: 30px;">$9.99/day</p>
+                        <div class="info-bubble" onclick="showInfoPopup('PEI')">i</div>
+                    </div>
+                    <div class="addon-option" data-addon="Unlimited Mileage" data-price="49.99" data-daily="true">
+                        <h3>Unlimited Mileage</h3>
+                        <p style="margin-right: 30px;">$49.99/day</p>
+                        <div class="info-bubble" onclick="showInfoPopup('Unlimited Mileage')">i</div>
+                    </div>
+                    <div class="addon-option" data-addon="Prepaid Recharge" data-price="29.99" data-daily="false">
+                        <h3>Prepaid Recharge</h3>
+                        <p style="margin-right: 30px;">$29.99/reservation</p>
+                        <div class="info-bubble" onclick="showInfoPopup('Prepaid Recharge')">i</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Identity Verification -->
+            <div id="step-4" class="step-container">
+                <h2>Step 4: Identity Verification</h2>
+                <button type="button" id="start-identity-verification" class="button">Start Identity Verification</button>
+            </div>
+
+            <!-- Step 5: Enter Your Details & Confirm Reservation -->
+            <div id="step-5" class="step-container">
+                <h2>Step 5: Enter Your Details & Confirm Reservation</h2>
+                <div class="details-section">
+                    <div>
+                        <input type="text" id="full-name" placeholder="Full Name" required readonly>
+                        <input type="email" id="email" placeholder="Email Address" required>
+                        <input type="tel" id="phone" placeholder="Phone Number" required>
+                        <input type="text" id="address-line1" placeholder="Address Line 1" required>
+                        <input type="text" id="address-line2">
+                        <input type="text" id="city" placeholder="City" required>
+                    </div>
+                    <div>
+                        <input type="text" id="state" placeholder="State" required>
+                        <input type="text" id="zip" placeholder="Zip Code" required>
+                        <input type="date" id="dob" placeholder="Date of Birth" required>
+                        <input type="date" id="dl-expiration" placeholder="Driver's License Expiration Date" required>
+                    </div>
+                </div>
+
+                <h3>Payment Information</h3>
+                <div id="card-element"></div>
+                <div id="card-errors" role="alert" style="color: red;"></div>
+
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px;">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms" style="font-weight: normal;">
+                        I agree to receive promotional messages sent, and this agreement isn't a condition of any purchase. I also agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Msg & Data rates may apply.
+                    </label>
+                </div>
+                <button type="button" id="confirm-reservation" class="button" style="margin-top: 20px;">Confirm Reservation</button>
+            </div>
+
+            <!-- Step 6: Reservation Confirmed -->
+            <div id="step-6" class="step-container">
+                <h2>Reservation Confirmed</h2>
+                <p>Your reservation has been successfully confirmed. Thank you for choosing Altoev!</p>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" id="prev-button" class="button" style="display: none;">Previous</button>
+                <button type="button" id="next-button" class="button" style="display: none;">Next</button>
+            </div>
+        </div>
+
+        <div class="summary-content">
+            <img id="summary-vehicle-image" src="">
+            <h3>Reservation Summary</h3>
+            <div class="summary-details">
+                <p>Start Date & Time: <span id="summary-start-date"></span></p>
+                <p>End Date & Time: <span id="summary-end-date"></span></p>
+                <p>Selected Vehicle: <span id="summary-vehicle"></span></p>
+                <p>Selected Protection Plan: <span id="summary-protection-plan"></span></p>
+                <p>Add-ons: <span id="summary-add-ons"></span></p>
+                <p>Total Due: <span id="total-due"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <a href="/">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </a>
+            </div>
+            <div class="footer-links">
+                <ul>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Altoev, Inc. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const totalSteps = 6;
+            let currentStep = 1;
+
+            const stripePublicKey = await fetch('/stripe-public-key').then(res => res.text());
+            const stripe = Stripe(stripePublicKey);
+            const elements = stripe.elements();
+            const cardElement = elements.create("card");
+            cardElement.mount("#card-element");
+
+            // Initialize Flatpickr with default values for start and end date
+            const now = new Date();
+            now.setHours(now.getHours() + 3);
+            const startDateDefault = new Date(now);
+            const endDateDefault = new Date(now);
+            endDateDefault.setDate(endDateDefault.getDate() + 2);
+
+            flatpickr("#start-date", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                defaultDate: startDateDefault,
+                minDate: "today",
+                onChange: function (selectedDates) {
+                    if (selectedDates.length > 0) {
+                        const minEndDate = new Date(selectedDates[0]);
+                        minEndDate.setDate(minEndDate.getDate() + 1);
+                        flatpickr("#end-date", {
+                            enableTime: true,
+                            dateFormat: "Y-m-d H:i",
+                            defaultDate: minEndDate,
+                            minDate: minEndDate
+                        });
+                    }
+                }
+            });
+
+            flatpickr("#end-date", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                defaultDate: endDateDefault,
+                minDate: "today"
+            });
+
+            async function createIdentityVerification() {
+                try {
+                    const response = await fetch('/create-identity-verification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to create identity verification');
+                    }
+                    const data = await response.json();
+                    return data.url;
+                } catch (error) {
+                    console.error('Error fetching identity verification link:', error);
+                    return null;
+                }
+            }
+
+            document.getElementById("start-identity-verification").addEventListener("click", async () => {
+                const verificationUrl = await createIdentityVerification();
+                if (verificationUrl) {
+                    window.location.href = verificationUrl;
+                } else {
+                    console.error('Could not create identity verification link');
+                }
+            });
+
+            function showStep(step) {
+                const stepElement = document.getElementById(`step-${step}`);
+                if (stepElement) {
+                    document.querySelectorAll(".step-container").forEach((container) => {
+                        container.classList.remove("active");
+                    });
+                    stepElement.classList.add("active");
+                } else {
+                    console.error(`Step ${step} not found`);
+                }
+
+                document.getElementById("prev-button").style.display = step === 1 || step === totalSteps ? "none" : "inline-block";
+                document.getElementById("next-button").style.display = step === totalSteps - 1 || step === totalSteps ? "none" : "inline-block";
+            }
+
+            function updateSummary() {
+                const startDate = document.getElementById("start-date").value;
+                const endDate = document.getElementById("end-date").value;
+                const selectedVehicle = document.querySelector(".vehicle-option.selected");
+                const selectedAddons = document.querySelectorAll(".addon-option.selected");
+
+                document.getElementById("summary-start-date").innerText = startDate;
+                document.getElementById("summary-end-date").innerText = endDate;
+                document.getElementById("summary-vehicle").innerText = selectedVehicle ? selectedVehicle.dataset.vehicle : "";
+
+                let addonsText = "";
+                let totalPrice = selectedVehicle ? parseFloat(selectedVehicle.dataset.price) : 0;
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                const totalDays = days < 1 ? 1 : days;
+
+                totalPrice *= totalDays;
+
+                selectedAddons.forEach(addon => {
+                    addonsText += `${addon.dataset.addon}, `;
+                    if (addon.dataset.daily === "true") {
+                        totalPrice += parseFloat(addon.dataset.price) * totalDays;
+                    } else {
+                        totalPrice += parseFloat(addon.dataset.price);
+                    }
+                });
+
+                addonsText = addonsText.slice(0, -2);
+                document.getElementById("summary-add-ons").innerText = addonsText;
+
+                totalPrice += totalPrice * 0.075; // Adding tax
+                document.getElementById("total-due").innerText = `$${totalPrice.toFixed(2)}`;
+            }
+
+            showStep(currentStep);
+
+            document.getElementById("next-button").addEventListener("click", () => {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                    updateSummary();
+                }
+            });
+
+            document.getElementById("prev-button").addEventListener("click", () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    showStep(currentStep);
+                    updateSummary();
+                }
+            });
+
+            document.getElementById("confirm-reservation").addEventListener("click", async () => {
+                const { token, error } = await stripe.createToken(cardElement);
+                if (error) {
+                    document.getElementById("card-errors").textContent = error.message;
+                } else {
+                    console.log("Token obtained:", token);
+                    // Add logic to send token to backend and complete the payment process
+                    const response = await fetch('/process-payment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            token: token.id,
+                            amount: Math.round(parseFloat(document.getElementById("total-due").innerText.replace('$', '')) * 100) // Convert to cents and round to nearest integer
+                        })
+                    });
+
+                    if (response.ok) {
+                        currentStep++;
+                        showStep(currentStep);
+                    } else {
+                        const responseData = await response.json();
+                        document.getElementById("card-errors").textContent = responseData.error;
+                    }
+                }
+            });
+
+            document.querySelectorAll(".vehicle-option").forEach((option) => {
+                option.addEventListener("click", () => {
+                    document.querySelectorAll(".vehicle-option").forEach((vehicle) => vehicle.classList.remove("selected"));
+                    option.classList.add("selected");
+                    document.getElementById("next-button").disabled = false;
+                    updateSummary();
+                });
+            });
+
+            document.querySelectorAll(".addon-option").forEach((option) => {
+                option.addEventListener("click", () => {
+                    option.classList.toggle("selected");
+                    updateSummary();
+                });
+            });
+
+            window.showInfoPopup = function (addon) {
+                let info = "";
+                switch (addon) {
+                    case 'SLI':
+                        info = "Supplemental Liability Insurance (SLI) provides extra liability coverage if you hit someone or something.";
+                        break;
+                    case 'SPDW':
+                        info = "Supplemental Physical Damage Warranty (SPDW) offers $0 deductible for any damage caused to the rental vehicle.";
+                        break;
+                    case 'PEI':
+                        info = "Personal Effects Insurance (PEI) covers personal items with a $25 deductible if they're damaged or stolen.";
+                        break;
+                    case 'Unlimited Mileage':
+                        info = "Unlimited Mileage allows you to drive without worrying about mileage limits for an additional daily fee.";
+                        break;
+                    case 'Prepaid Recharge':
+                        info = "Prepaid Recharge lets you return the car without refueling it, for a one-time fee per reservation.";
+                        break;
+                }
+                alert(info);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

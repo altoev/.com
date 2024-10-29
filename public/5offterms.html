@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5OFF Discount Terms & Conditions | Altoev</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="icon" href="images/favicon.ico">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+        }
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .terms-container {
+            max-width: 800px;
+            margin: 150px auto 100px; /* Adjusted margin for even spacing top and bottom */
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="nav-bar">
+            <div class="logo">
+                <button onclick="window.location.href='/'" style="background: none; border: none; cursor: pointer;">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="book">Book Now</a></li>
+                <li><a href="about">About Us</a></li>
+                <li><a href="contact">Contact</a></li>
+                <li><a href="login">Login</a></li>
+                <li><a href="register">Register</a></li>
+            </ul>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Terms Container Section -->
+    <div class="terms-container">
+        <h1>5OFF Discount Terms & Conditions</h1>
+        <p>The 5OFF discount code entitles you to a 5% discount on your total rental value during checkout. This offer is subject to the following terms and conditions:</p>
+        <ul>
+            <li>This offer is valid for a limited time only, subject to availability.</li>
+            <li>The 5OFF discount code can only be used once per customer.</li>
+            <li>Offer applies to rentals booked directly through Altoev's website.</li>
+            <li>The offer cannot be combined with any other discount, promotion, or special offer.</li>
+            <li>The discount is only valid for the value of the rental. Insurance and additional add-ons are not eligible for the discount.</li>
+            <li>Altoev, Inc. reserves the right to modify or cancel this promotion at any time.</li>
+            <li>This offer is non-transferable and has no cash value.</li>
+            <li>Misuse of the discount code or fraudulent activity may result in reservation cancellation without refund.</li>
+            <li>Offer valid only for residents of the United States aged 18 and older.</li>
+        </ul>
+        <p>For any questions or concerns, please contact us at <a href="mailto:support@altoev.com">support@altoev.com</a>.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content" style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 20px;">
+            <div class="footer-logo">
+                <a href="/">
+                    <img src="images/logo.png" alt="Altoev Logo" style="width: 120px;">
+                </a>
+            </div>
+            <div class="footer-links">
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; gap: 40px;">
+                    <li><a href="terms" style="color: #fff; text-decoration: none; transition: color 0.3s;">Terms of Service</a></li>
+                    <li><a href="privacy" style="color: #fff; text-decoration: none; transition: color 0.3s;">Privacy Policy</a></li>
+                    <li><a href="contact" style="color: #fff; text-decoration: none; transition: color 0.3s;">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom" style="margin-top: 20px; font-size: 0.9rem; text-align: center; padding-bottom: 20px;">
+            <p>&copy; 2024 Altoev, Inc. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

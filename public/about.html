@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Altoev</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="icon" href="images/favicon.ico">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        .content-wrapper {
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+            text-align: center;
+            flex: 1; /* Ensures the content pushes the footer to the bottom */
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #555;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="nav-bar">
+            <div class="logo">
+                <button onclick="window.location.href='/'" style="background: none; border: none; cursor: pointer;">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="book">Book Now</a></li>
+                <li><a href="about">About Us</a></li>
+                <li><a href="contact">Contact</a></li>
+                <li><a href="login">Login</a></li>
+                <li><a href="register">Register</a></li>
+            </ul>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- About Us Content -->
+    <main class="content-wrapper" style="margin-top: 100px;">
+        <div class="about-section">
+            <h1>About Us</h1>
+            <p>Welcome to Jaxev Rentals & Altoev. We are passionate about revolutionizing the car rental experience with electric vehicles. Our goal is to make the future of transportation accessible, sustainable, and enjoyable for everyone.</p>
+        </div>
+
+        <h2>Our Story</h2>
+        <p>Founded in 2023, Jaxev Rentals started with a mission to provide a clean and sustainable transportation option for those looking to rent a vehicle. Since then, we've grown our fleet to include some of the latest electric vehicles available, focusing on quality, customer service, and a seamless rental experience.</p>
+        <p>As we evolved, Altoev became our flagship service, allowing us to reach more customers while staying true to our mission. We believe in the power of electric mobility to change the world for the better, one rental at a time.</p>
+
+        <h2>Our Mission</h2>
+        <p>Our mission is to accelerate the adoption of electric vehicles by making them accessible to everyone. We offer a diverse fleet of premium EVs that are not only eco-friendly but also fun to drive. Whether you are renting for a business trip, a family getaway, or just to experience an electric vehicle for the first time, we've got you covered.</p>
+
+        <h2>Why Choose Us?</h2>
+        <ul>
+            <li><strong>Eco-Friendly Fleet:</strong> All-electric vehicles that reduce your carbon footprint while delivering a premium experience.</li>
+            <li><strong>Transparent Pricing:</strong> No hidden fees or surprises. We believe in fair, upfront pricing.</li>
+            <li><strong>Customer-Centric Service:</strong> We strive to provide the best service possible, whether you're renting for a day or a week.</li>
+            <li><strong>Convenient Rentals:</strong> Our streamlined online booking makes it easier than ever to reserve the perfect EV for your needs.</li>
+        </ul>
+
+        <h2>Join the Electric Movement</h2>
+        <p>At Altoev, we're committed to leading the charge towards a sustainable future. When you rent with us, you're not just renting a car—you're becoming part of a movement towards better, cleaner transportation. We invite you to join us on this journey and experience the future of driving today.</p>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <a href="/">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </a>
+            </div>
+            <div class="footer-links">
+                <ul>
+                    <li><a href="terms">Terms of Service</a></li>
+                    <li><a href="privacy">Privacy Policy</a></li>
+                    <li><a href="contact">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Altoev, Inc. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

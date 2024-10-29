@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | Altoev</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="icon" href="images/favicon.ico">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+        }
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .contact-section {
+            margin-top: 150px;
+            display: flex;
+            gap: 40px;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .contact-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        .contact-info p {
+            margin: 10px 0;
+        }
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 500px;
+            flex: 1;
+            min-width: 300px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        button[type="submit"] {
+            background-color: #000;
+            color: #fff;
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover {
+            background-color: #333;
+        }
+        .thank-you-message {
+            display: none;
+            color: green;
+            margin-top: 20px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .contact-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            .contact-info, .contact-form {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="nav-bar">
+            <div class="logo">
+                <button onclick="window.location.href='/'" style="background: none; border: none; cursor: pointer;">
+                    <img src="images/logo.png" alt="Altoev Logo">
+                </button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="book">Book Now</a></li>
+                <li><a href="about">About Us</a></li>
+                <li><a href="contact">Contact</a></li>
+                <li><a href="login">Login</a></li>
+                <li><a href="register">Register</a></li>
+            </ul>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contact Section -->
+    <div class="content-wrapper">
+        <main class="contact-section">
+            <div class="contact-info">
+                <h1>Contact Us</h1>
+                <p>Have questions or need help? Please use the form to reach out to us, and we'll get back to you as soon as possible.</p>
+                <p><strong>Office Address:</strong><br>14600 Whirlwind Avenue<br>Suite 135<br>Jacksonville, FL 32218</p>
+                <p><strong>Mailing Address:</strong><br>P.O. Box 77084<br>Jacksonville, FL 32226</p>
+                <p><strong>Email:</strong> <a href="mailto:support@altoev.com">support@altoev.com</a></p>
+                <p><strong>Phone Number:</strong> (833) 425 - 8638</p>
+                <p><strong>Fax:</strong> (904) 203 - 4829</p>
+            </div>
+            <form class="contact-form" id="contact-form">
+                <div class="thank-you-message" id="thank-you-message">
+                    Thank you! We will be in touch shortly.
+                </div>
+                <label for="name">Your Name:</label>
+                <input type="text" name="name" id="name" placeholder="Your Name" required>
+                
+                <label for="email">Your Email:</label>
+                <input type="email" name="email" id="email" placeholder="Your Email" required>
+                
+                <label for="message">Your Message:</label>
+                <textarea name="message" id="message" placeholder="Your Message" rows="5" required></textarea>
+                
+                <button type="submit">Send Message</button>
+            </form>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content" style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 20px;">
+            <div class="footer-logo">
+                <a href="/">
+                    <img src="images/logo.png" alt="Altoev Logo" style="width: 120px;">
+                </a>
+            </div>
+            <div class="footer-links">
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; gap: 40px;">
+                    <li><a href="terms" style="color: #fff; text-decoration: none; transition: color 0.3s;">Terms of Service</a></li>
+                    <li><a href="privacy" style="color: #fff; text-decoration: none; transition: color 0.3s;">Privacy Policy</a></li>
+                    <li><a href="contact" style="color: #fff; text-decoration: none; transition: color 0.3s;">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom" style="margin-top: 20px; font-size: 0.9rem; text-align: center; padding-bottom: 20px;">
+            <p>&copy; 2024 Altoev, Inc. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // JavaScript to handle form submission
+        const contactForm = document.getElementById('contact-form');
+        const thankYouMessage = document.getElementById('thank-you-message');
+
+        contactForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(contactForm);
+
+            fetch('https://formspree.io/f/xeoqjyvj', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    thankYouMessage.style.display = 'block';
+                    contactForm.reset();
+                } else {
+                    alert('Oops! There was a problem with your submission. Please try again.');
+                }
+            }).catch(error => {
+                alert('Oops! There was a problem with your submission. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>

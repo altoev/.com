@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turo Email Parser</title>
+</head>
+<body>
+  <h1>Turo Email Parser Results</h1>
+  
+  <h2>Parsed Emails:</h2>
+  <div id="parsedEmails">
+    Loading emails...
+  </div>
+
+  <script>
+    async function fetchParsedEmails() {
+      try {
+        // Adding a unique query parameter to prevent caching
+        const response = await fetch(`/parsed-emails?timestamp=${new Date().getTime()}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const emails = await response.json();
+        const emailsContainer = document.getElementById('parsedEmails');
+        emailsContainer.innerHTML = ''; // Clear existing content
+
+        if (emails.length > 0) {
+          // Create table structure
+          const table = document.createElement('table');
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>Customer Name</th>
+                <th>Rental Number</th>
+                <th>Rental Dates</th>
+                <th>Model</th>
+                <th>Extracted Number</th>
+                <th>Status</th>
+                <th>Received Date</th>
+                <th>Actions</th>
+                <th>Raw Content</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          `;
+          
+          // Populate table rows with email data
+          emails.forEach(email => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${email.customerName || 'Not Found'}</td>
+              <td>${email.rentalNumber || 'Not Found'}</td>
+              <td>${email.rentalDates || 'Not Found'}</td>
+              <td>${email.model || 'Not Found'}</td>
+              <td>${email.extractedNumber
+                ? `<a href="https://turo.com/us/en/car-rental/united-states/jacksonville-fl/tesla/${email.model}/${email.extractedNumber}" target="_blank">${email.extractedNumber}</a>`
+                : 'Not Found'}
+              </td>
+              <td>${email.status || 'Unknown'}</td>
+              <td>${new Date(email.receivedDate).toLocaleString() || 'Unknown'}</td>
+              <td>
+                ${email.status === 'Valid' ? `<button onclick="confirmCancel('${email._id}')">Cancel</button>` : 'Cancelled'}
+              </td>
+              <td><textarea rows="5" cols="30" readonly>${email.rawContent || 'N/A'}</textarea></td>
+            `;
+            table.querySelector('tbody').appendChild(row);
+          });
+
+          emailsContainer.appendChild(table);
+        } else {
+          emailsContainer.innerHTML = '<p>No new emails found.</p>';
+        }
+      } catch (error) {
+        console.error('Error fetching parsed emails:', error);
+        document.getElementById('parsedEmails').innerHTML = '<p>Error loading emails. Check console for details.</p>';
+      }
+    }
+
+    async function confirmCancel(emailId) {
+      if (confirm("Are you sure you want to cancel this reservation?")) {
+        try {
+          const response = await fetch(`/cancel-email/${emailId}`, { method: 'POST' });
+          if (response.ok) {
+            alert("Reservation cancelled successfully.");
+            fetchParsedEmails(); // Refresh the list
+          } else {
+            alert("Failed to cancel the reservation.");
+          }
+        } catch (error) {
+          console.error("Error cancelling reservation:", error);
+          alert("An error occurred. Check console for details.");
+        }
+      }
+    }
+
+    // Fetch parsed emails every 10 seconds
+    setInterval(fetchParsedEmails, 10000);
+    fetchParsedEmails(); // Initial load
+  </script>
+</body>
+</html>
