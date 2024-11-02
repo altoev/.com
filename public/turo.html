@@ -60,7 +60,9 @@
               <td>${email.status || 'Unknown'}</td>
               <td>${new Date(email.receivedDate).toLocaleString() || 'Unknown'}</td>
               <td>
-                ${email.status === 'Valid' ? `<button onclick="confirmCancel('${email._id}')">Cancel</button>` : 'Cancelled'}
+                ${(email.status === 'Booked' || email.status === 'Ongoing') 
+                  ? `<button onclick="confirmCancel('${email._id}')">Cancel</button>` 
+                  : email.status}
               </td>
               <td><textarea rows="5" cols="30" readonly>${email.rawContent || 'N/A'}</textarea></td>
             `;

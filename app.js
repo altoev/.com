@@ -9,11 +9,13 @@ const Stripe = require('stripe');
 const Imap = require('imap-simple');
 const quotedPrintable = require('quoted-printable');
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
+const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
 
 // Load environment variables
 dotenv.config();
 
-if (!process.env.PERSONA_API_KEY || !process.env.SIMPLE_TXT_API || !process.env.STRIPE_SECRET_KEY || !process.env.IMAP_USER || !process.env.IMAP_PASS || !process.env.IMAP_HOST || !process.env.MONGO_DB) {
+if (!process.env.PERSONA_API_KEY || !process.env.SIMPLE_TXT_API || !process.env.STRIPE_SECRET_KEY || !process.env.IMAP_USER || !process.env.IMAP_PASS || !process.env.IMAP_HOST || !process.env.MONGO_DB || !process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET || !process.env.PLAID_TEMPLATE_ID) {
   console.error('Environment variables not set correctly. Check your .env file.');
   process.exit(1);
 }
@@ -39,7 +41,9 @@ const emailSchema = new mongoose.Schema({
   customerPhone: String,
   receivedDate: Date,
   rawContent: String,
-  status: { type: String, default: 'Valid' } // Adding status field with default "Valid"
+  startDateTime: Date,
+  endDateTime: Date,
+  status: { type: String, default: 'Booked' }
 });
 
 const ParsedEmail = mongoose.model('ParsedEmail', emailSchema);
@@ -49,76 +53,72 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Plaid client setup
+const plaidConfig = new Configuration({
+  basePath: PlaidEnvironments.production,
+  baseOptions: {
+    headers: {
+      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+      'PLAID-SECRET': process.env.PLAID_SECRET,
+      'Plaid-Version': '2020-09-14',
+    },
+  },
+});
+const plaidClient = new PlaidApi(plaidConfig);
+
+// Helper function to check and update reservation status
+async function checkAndUpdateReservationStatus() {
+  const now = moment().tz("America/New_York");
+  const reservations = await ParsedEmail.find({ status: { $in: ['Booked', 'Ongoing'] } });
+
+  for (const reservation of reservations) {
+    if (reservation.startDateTime && moment(reservation.startDateTime).isBefore(now) && moment(reservation.endDateTime).isAfter(now)) {
+      if (reservation.status !== 'Ongoing') {
+        reservation.status = 'Ongoing';
+        await reservation.save();
+        console.log(`Reservation ${reservation.rentalNumber} marked as Ongoing.`);
+      }
+    } else if (reservation.endDateTime && moment(reservation.endDateTime).isBefore(now)) {
+      reservation.status = 'Completed';
+      await reservation.save();
+      console.log(`Reservation ${reservation.rentalNumber} marked as Completed.`);
+    }
+  }
+}
+
+// Regularly check for reservations that need to be marked as Ongoing or Completed
+setInterval(checkAndUpdateReservationStatus, 60000);
+
 // Route to return the homepage
 app.get('/', (req, res) => {
   res.send('Welcome to Altoev API');
 });
 
-// Generate a unique reservation number
-function generateUniqueReservationNumber() {
-  let reservationNumber;
-  do {
-    reservationNumber = `AJAX-${Math.floor(100000000 + Math.random() * 900000000)}`;
-  } while (reservations[reservationNumber]);
-  return reservationNumber;
-}
-
 // Generate reservation number route
 app.post('/generate-reservation-number', (req, res) => {
-  const reservationNumber = generateUniqueReservationNumber();
-  reservations[reservationNumber] = { status: 'in-progress' };
+  const reservationNumber = `AJAX-${Math.floor(100000000 + Math.random() * 900000000)}`;
   res.status(200).send({ reservationNumber });
 });
 
-// Persona Identity Verification Route
-app.post('/persona-api/create-identity-verification', async (req, res) => {
+// Plaid Identity Verification Route
+app.post('/create-plaid-verification', async (req, res) => {
   try {
-    const { inquiryTemplateId } = req.body;
-    if (!inquiryTemplateId) {
-      return res.status(400).send({ error: 'Missing required field: inquiryTemplateId' });
-    }
-
-    const response = await axios.post('https://withpersona.com/api/v1/inquiries', {
-      inquiry_template_id: inquiryTemplateId,
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.PERSONA_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    res.status(200).send({ inquiry: response.data.data });
-  } catch (error) {
-    console.error('Error creating Persona inquiry:', error.message);
-    res.status(500).send({ error: error.message });
-  }
-});
-
-// SimpleTexting API Route to send SMS
-app.post('/send-text', async (req, res) => {
-  const { phoneNumber, reservationNumber, startDateTime, endDateTime } = req.body;
-
-  if (!phoneNumber || !reservationNumber || !startDateTime || !endDateTime) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  const message = `Thank you for booking with Altoev!\n\nReservation Number: ${reservationNumber}\nStart Date & Time: ${startDateTime}\nEnd Date & Time: ${endDateTime}\n\nIf you have any questions, don't hesitate to text us back here or email us at support@altoev.com`;
-
-  try {
-    const response = await axios.post('https://api-app2.simpletexting.com/v2/sms/send', {
-      phone: phoneNumber,
-      message: message,
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.SIMPLE_TXT_API}`,
-        'Content-Type': 'application/json',
+    const response = await plaidClient.linkTokenCreate({
+      user: {
+        client_user_id: `user-${Math.floor(Math.random() * 1000000000)}`,
+      },
+      client_name: "Altoev",
+      products: ["identity_verification"],
+      country_codes: ["US"],
+      language: "en",
+      identity_verification: {
+        template_id: process.env.PLAID_TEMPLATE_ID,
       },
     });
-
-    res.status(200).json({ success: true, data: response.data });
+    res.status(200).json({ link_token: response.data.link_token });
   } catch (error) {
-    console.error('Error sending text message:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('Error creating Plaid verification link:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.response ? error.response.data : error.message });
   }
 });
 
@@ -146,14 +146,27 @@ app.post('/stripe/create-verification-session', async (req, res) => {
   }
 });
 
-// Canopy Insurance Verification Route
-app.post('/canopy-verification', (req, res) => {
-  res.send('Canopy insurance verification process');
-});
-
 // Stripe Public Key Route
 app.get('/stripe-public-key', (req, res) => {
   res.send(process.env.STRIPE_PUBLISHABLE_KEY);
+});
+
+// Endpoint to process payment
+app.post('/process-payment', async (req, res) => {
+  const { token, amount } = req.body;
+
+  try {
+    const charge = await stripe.charges.create({
+      amount,
+      currency: 'usd',
+      description: 'Car rental payment',
+      source: token,
+    });
+    res.status(200).send({ success: true, charge });
+  } catch (error) {
+    console.error('Error processing payment:', error.message);
+    res.status(500).json({ error: 'Payment failed. Please try again.' });
+  }
 });
 
 // Fetch parsed emails from MongoDB for the frontend
@@ -215,12 +228,12 @@ async function fetchEmails() {
 
     for (const item of messages) {
       const subject = item.parts.find(part => part.which === 'HEADER.FIELDS (FROM TO SUBJECT DATE)').body.subject[0];
-
       const isBooking = subject.toLowerCase().includes("is booked");
+      const isChange = subject.toLowerCase().includes("has changed");
       const isCancellation = /has cancelled.*trip with your/i.test(subject);
 
-      if (!isBooking && !isCancellation) {
-        console.log("Skipping email as subject does not match booking or cancellation.");
+      if (!isBooking && !isChange && !isCancellation) {
+        console.log("Skipping email as subject does not match booking, change, or cancellation.");
         continue;
       }
 
@@ -233,7 +246,20 @@ async function fetchEmails() {
 
       if (isBooking && rentalNumber) {
         const datesMatch = emailContent.match(/booked from\s+(.+?)\s+(\d{1,2}:\d{2}\s?[ap]m)\s+to\s+(.+?)\s+(\d{1,2}:\d{2}\s?[ap]m)/i);
-        const rentalDates = datesMatch ? `${datesMatch[1]} ${datesMatch[2]} to ${datesMatch[3]} ${datesMatch[4]}` : 'Not Found';
+        if (!datesMatch) {
+          console.warn("Date format not matched; skipping email.");
+          continue;
+        }
+        
+        const rentalDates = `${datesMatch[1]} ${datesMatch[2]} to ${datesMatch[3]} ${datesMatch[4]}`;
+        const startDateTime = moment.tz(`${datesMatch[1]} ${datesMatch[2]}`, "dddd, MMMM D, YYYY h:mm A", "America/New_York").toDate();
+        const endDateTime = moment.tz(`${datesMatch[3]} ${datesMatch[4]}`, "dddd, MMMM D, YYYY h:mm A", "America/New_York").toDate();
+
+        if (!startDateTime || !endDateTime || isNaN(startDateTime) || isNaN(endDateTime)) {
+          console.warn("Invalid date parsing, skipping email.");
+          continue;
+        }
+
         const modelMatch = emailContent.match(/tesla\/(model-[3yxs])\/(\d{7})/i);
         const extractedNumber = modelMatch ? modelMatch[2] : 'Not Found';
         const model = modelMatch ? modelMatch[1] : 'Not Found';
@@ -242,20 +268,66 @@ async function fetchEmails() {
         const phoneNumberMatch = emailContent.match(/(\+\d{1,3}\s?\d{1,3}[\s-]?\d{3}[\s-]?\d{4})/);
         const customerPhone = phoneNumberMatch ? phoneNumberMatch[0].trim() : 'Not Found';
 
-        const parsedEmail = new ParsedEmail({
-          rentalNumber,
-          rentalDates,
-          model,
-          extractedNumber,
-          customerName,
-          customerPhone,
-          receivedDate: item.attributes.date,
-          rawContent: emailContent,
-          status: 'Valid'
-        });
+        const existingEmail = await ParsedEmail.findOne({ rentalNumber });
+        if (existingEmail) {
+          if (
+            existingEmail.rentalDates !== rentalDates ||
+            existingEmail.model !== model ||
+            existingEmail.customerName !== customerName ||
+            existingEmail.customerPhone !== customerPhone ||
+            existingEmail.startDateTime.getTime() !== startDateTime.getTime() ||
+            existingEmail.endDateTime.getTime() !== endDateTime.getTime()
+          ) {
+            existingEmail.rentalDates = rentalDates;
+            existingEmail.model = model;
+            existingEmail.extractedNumber = extractedNumber;
+            existingEmail.customerName = customerName;
+            existingEmail.customerPhone = customerPhone;
+            existingEmail.receivedDate = item.attributes.date;
+            existingEmail.rawContent = emailContent;
+            existingEmail.startDateTime = startDateTime;
+            existingEmail.endDateTime = endDateTime;
+            await existingEmail.save();
+            console.log(`Updated existing reservation ${rentalNumber} with new information.`);
+          } else {
+            console.log(`Duplicate email for reservation ${rentalNumber} with no new information, ignored.`);
+          }
+        } else {
+          const parsedEmail = new ParsedEmail({
+            rentalNumber,
+            rentalDates,
+            model,
+            extractedNumber,
+            customerName,
+            customerPhone,
+            receivedDate: item.attributes.date,
+            rawContent: emailContent,
+            startDateTime,
+            endDateTime,
+            status: 'Booked'
+          });
+          await parsedEmail.save();
+          console.log(`Parsed Data saved to MongoDB -> Rental Number: ${rentalNumber}, Status: Booked`);
+        }
+      } else if (isChange && rentalNumber) {
+        const changeMatch = emailContent.match(/Trip start:\s+([\d\/]+)\s+(\d{1,2}:\d{2}\s?[ap]m)\s+Trip end:\s+([\d\/]+)\s+(\d{1,2}:\d{2}\s?[ap]m)/i);
+        if (!changeMatch) {
+          console.warn("Date format not matched in change email; skipping.");
+          continue;
+        }
 
-        await parsedEmail.save();
-        console.log(`Parsed Data saved to MongoDB -> Rental Number: ${rentalNumber}, Status: Valid`);
+        const startDateTime = moment.tz(`${changeMatch[1]} ${changeMatch[2]}`, "M/D/YY h:mm A", "America/New_York").toDate();
+        const endDateTime = moment.tz(`${changeMatch[3]} ${changeMatch[4]}`, "M/D/YY h:mm A", "America/New_York").toDate();
+
+        const existingEmail = await ParsedEmail.findOne({ rentalNumber });
+        if (existingEmail) {
+          existingEmail.startDateTime = startDateTime;
+          existingEmail.endDateTime = endDateTime;
+          await existingEmail.save();
+          console.log(`Updated reservation ${rentalNumber} with changed dates.`);
+        } else {
+          console.log(`No existing reservation found for change email with rental number ${rentalNumber}.`);
+        }
       } else if (isCancellation && rentalNumber) {
         const cancelledEmail = await ParsedEmail.findOneAndUpdate(
           { rentalNumber },
@@ -277,8 +349,9 @@ async function fetchEmails() {
   }
 }
 
-// Set an interval to check for new emails every 5 minutes
+// Set an interval to check for new emails and update reservation statuses
 setInterval(fetchEmails, 300000);
+setInterval(checkAndUpdateReservationStatus, 60000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {

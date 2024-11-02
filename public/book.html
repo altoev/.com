@@ -114,6 +114,12 @@
             outline: none;
         }
 
+        .non-editable {
+            background-color: #f8f9fa;
+            border: none;
+            color: #495057;
+        }
+
         .vehicle-selection {
             display: flex;
             gap: 10px;
@@ -219,12 +225,16 @@
         h3 {
             color: #333;
         }
+
+        .note {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
 <body>
-    <script src="https://cdn.usecanopy.com/v2/embed.js" async></script>
-
     <!-- Navigation Bar -->
     <header>
         <nav class="nav-bar">
@@ -252,6 +262,9 @@
     <div class="content-wrapper">
         <div class="main-content">
             <h1>Book Your Ride</h1>
+            <!-- Note for Eastern Time Zone -->
+            <p class="note">* All times are in Eastern Time Zone (EST).</p>
+
             <!-- Step 1: Select Dates & Times -->
             <div id="step-1" class="step-container active">
                 <h2>Step 1: Select Dates & Times</h2>
@@ -259,6 +272,7 @@
                 <input type="text" id="start-date" class="flatpickr" required>
                 <label>End Date & Time:</label>
                 <input type="text" id="end-date" class="flatpickr" required>
+                <button type="button" class="button" id="next-button">Next</button>
             </div>
 
             <!-- Step 2: Choose Vehicle -->
@@ -281,6 +295,7 @@
                         <p>$139/day</p>
                     </div>
                 </div>
+                <button type="button" class="button" id="next-button-2">Next</button>
             </div>
 
             <!-- Step 3: Choose Protection Plans & Add-ons -->
@@ -313,31 +328,39 @@
                         <div class="info-bubble" onclick="showInfoPopup('Prepaid Recharge')">i</div>
                     </div>
                 </div>
+                <button type="button" class="button" id="next-button-3">Next</button>
             </div>
 
-            <!-- Step 4: Identity Verification -->
+            <!-- Step 4: Plaid Identity Verification -->
             <div id="step-4" class="step-container">
-                <h2>Step 4: Identity Verification</h2>
-                <button type="button" id="start-identity-verification" class="button">Start Identity Verification</button>
+                <h2>Step 4: Plaid Identity Verification</h2>
+                <p id="identity-status">Identity Verification in Progress</p>
+                <iframe class="embedded-verification" id="plaid-verification-frame" src="" style="width: 100%; height: 500px;"></iframe>
+                <button type="button" class="button" id="next-button-4" style="display: none;">Next</button>
             </div>
 
-            <!-- Step 5: Enter Your Details & Confirm Reservation -->
+            <!-- Step 5: Axle Insurance Verification -->
             <div id="step-5" class="step-container">
-                <h2>Step 5: Enter Your Details & Confirm Reservation</h2>
+                <h2>Step 5: Insurance Verification</h2>
+                <iframe id="axle-verification-frame" class="embedded-verification" src="" style="width: 100%; height: 600px;"></iframe>
+                <button type="button" class="button" id="next-button-5">Next</button>
+            </div>
+
+            <!-- Step 6: Enter Your Details & Confirm Reservation -->
+            <div id="step-6" class="step-container">
+                <h2>Step 6: Enter Your Details & Confirm Reservation</h2>
                 <div class="details-section">
                     <div>
-                        <input type="text" id="full-name" placeholder="Full Name" required readonly>
+                        <input type="text" id="full-name" placeholder="Full Name" class="non-editable" readonly>
                         <input type="email" id="email" placeholder="Email Address" required>
-                        <input type="tel" id="phone" placeholder="Phone Number" required>
-                        <input type="text" id="address-line1" placeholder="Address Line 1" required>
-                        <input type="text" id="address-line2">
-                        <input type="text" id="city" placeholder="City" required>
+                        <input type="tel" id="phone" placeholder="Phone Number" class="non-editable" readonly>
+                        <input type="text" id="address-line1" placeholder="Address Line 1" class="non-editable" readonly>
+                        <input type="text" id="city" placeholder="City" class="non-editable" readonly>
                     </div>
                     <div>
-                        <input type="text" id="state" placeholder="State" required>
-                        <input type="text" id="zip" placeholder="Zip Code" required>
-                        <input type="date" id="dob" placeholder="Date of Birth" required>
-                        <input type="date" id="dl-expiration" placeholder="Driver's License Expiration Date" required>
+                        <input type="text" id="state" placeholder="State" class="non-editable" readonly>
+                        <input type="text" id="zip" placeholder="Zip Code" class="non-editable" readonly>
+                        <input type="text" id="dob" placeholder="Date of Birth" class="non-editable" readonly>
                     </div>
                 </div>
 
@@ -354,15 +377,14 @@
                 <button type="button" id="confirm-reservation" class="button" style="margin-top: 20px;">Confirm Reservation</button>
             </div>
 
-            <!-- Step 6: Reservation Confirmed -->
-            <div id="step-6" class="step-container">
+            <!-- Step 7: Reservation Confirmed -->
+            <div id="step-7" class="step-container">
                 <h2>Reservation Confirmed</h2>
                 <p>Your reservation has been successfully confirmed. Thank you for choosing Altoev!</p>
             </div>
 
             <div class="nav-buttons">
                 <button type="button" id="prev-button" class="button" style="display: none;">Previous</button>
-                <button type="button" id="next-button" class="button" style="display: none;">Next</button>
             </div>
         </div>
 
@@ -402,10 +424,12 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
-            const totalSteps = 6;
+            const totalSteps = 7;
             let currentStep = 1;
+            let plaidPassed = false;
 
             const stripePublicKey = await fetch('/stripe-public-key').then(res => res.text());
             const stripe = Stripe(stripePublicKey);
@@ -413,27 +437,36 @@
             const cardElement = elements.create("card");
             cardElement.mount("#card-element");
 
-            // Initialize Flatpickr with default values for start and end date
-            const now = new Date();
+            function toEST(date) {
+                return new Date(date.toLocaleString("en-US", { timeZone: "America/New_York" }));
+            }
+
+            let now = new Date();
+            now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15);
             now.setHours(now.getHours() + 3);
+            now = toEST(now);
+
             const startDateDefault = new Date(now);
-            const endDateDefault = new Date(now);
+            const endDateDefault = new Date(startDateDefault);
             endDateDefault.setDate(endDateDefault.getDate() + 2);
 
             flatpickr("#start-date", {
                 enableTime: true,
-                dateFormat: "Y-m-d H:i",
+                dateFormat: "m/d/Y h:i K",
                 defaultDate: startDateDefault,
                 minDate: "today",
+                minuteIncrement: 15,
                 onChange: function (selectedDates) {
                     if (selectedDates.length > 0) {
-                        const minEndDate = new Date(selectedDates[0]);
-                        minEndDate.setDate(minEndDate.getDate() + 1);
+                        let minEndDate = new Date(selectedDates[0]);
+                        minEndDate = toEST(minEndDate);
+                        minEndDate.setDate(minEndDate.getDate() + 2);
                         flatpickr("#end-date", {
                             enableTime: true,
-                            dateFormat: "Y-m-d H:i",
+                            dateFormat: "m/d/Y h:i K",
                             defaultDate: minEndDate,
-                            minDate: minEndDate
+                            minDate: minEndDate,
+                            minuteIncrement: 15
                         });
                     }
                 }
@@ -441,38 +474,76 @@
 
             flatpickr("#end-date", {
                 enableTime: true,
-                dateFormat: "Y-m-d H:i",
+                dateFormat: "m/d/Y h:i K",
                 defaultDate: endDateDefault,
-                minDate: "today"
+                minDate: "today",
+                minuteIncrement: 15
             });
 
-            async function createIdentityVerification() {
+            async function createPlaidVerification() {
                 try {
-                    const response = await fetch('/create-identity-verification', {
+                    const response = await fetch('/create-plaid-verification', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Server response:", data);
+
+                    const linkToken = data.link_token;
+
+                    if (!linkToken) {
+                        throw new Error("Failed to retrieve link token from server.");
+                    }
+
+                    const handler = Plaid.create({
+                        token: linkToken,
+                        onSuccess: function (public_token, metadata) {
+                            console.log("Plaid link successful:", metadata);
+                            plaidPassed = true;
+                            document.getElementById("identity-status").textContent = "Passed Identity Verification";
+                            document.getElementById("identity-status").style.color = "green";
+                            document.getElementById("next-button-4").style.display = "inline-block";
+
+                            document.getElementById("full-name").value = metadata.name || "";
+                            document.getElementById("dob").value = metadata.dob || "";
+                            document.getElementById("phone").value = metadata.phone || "";
+                            document.getElementById("address-line1").value = (metadata.address && metadata.address.line1) || "";
+                            document.getElementById("city").value = (metadata.address && metadata.address.city) || "";
+                            document.getElementById("state").value = (metadata.address && metadata.address.state) || "";
+                            document.getElementById("zip").value = (metadata.address && metadata.address.zip) || "";
+
+                            const axleURL = `https://jaxevrentals.axle.insure/?firstName=${metadata.name?.split(' ')[0] || ""}&lastName=${metadata.name?.split(' ')[1] || ""}&reservation=${sessionStorage.getItem("reservationNumber") || ""}&email=verification@insurance.altoev.com`;
+                            document.getElementById("axle-verification-frame").src = axleURL;
+                        },
+                        onExit: function (err, metadata) {
+                            if (err != null) {
+                                console.error("Plaid link error:", err);
+                            }
+                            console.log("Plaid link exited:", metadata);
+                            if (!plaidPassed) {
+                                const resumeButton = document.createElement("button");
+                                resumeButton.type = "button";
+                                resumeButton.className = "button";
+                                resumeButton.textContent = "Resume Identity Verification";
+                                resumeButton.onclick = createPlaidVerification;
+
+                                const identityStatusDiv = document.getElementById("identity-status");
+                                identityStatusDiv.innerHTML = "";
+                                identityStatusDiv.appendChild(resumeButton);
+                            }
                         }
                     });
-                    if (!response.ok) {
-                        throw new Error('Failed to create identity verification');
-                    }
-                    const data = await response.json();
-                    return data.url;
+
+                    handler.open();
                 } catch (error) {
-                    console.error('Error fetching identity verification link:', error);
-                    return null;
+                    console.error("Plaid verification error:", error);
                 }
             }
-
-            document.getElementById("start-identity-verification").addEventListener("click", async () => {
-                const verificationUrl = await createIdentityVerification();
-                if (verificationUrl) {
-                    window.location.href = verificationUrl;
-                } else {
-                    console.error('Could not create identity verification link');
-                }
-            });
 
             function showStep(step) {
                 const stepElement = document.getElementById(`step-${step}`);
@@ -485,8 +556,15 @@
                     console.error(`Step ${step} not found`);
                 }
 
-                document.getElementById("prev-button").style.display = step === 1 || step === totalSteps ? "none" : "inline-block";
-                document.getElementById("next-button").style.display = step === totalSteps - 1 || step === totalSteps ? "none" : "inline-block";
+                if (step === 4 && !plaidPassed) {
+                    createPlaidVerification();
+                } else if (step === 4 && plaidPassed) {
+                    document.getElementById("identity-status").textContent = "Passed Identity Verification";
+                    document.getElementById("identity-status").style.color = "green";
+                    document.getElementById("next-button-4").style.display = "inline-block";
+                }
+
+                document.getElementById("prev-button").style.display = step === 1 ? "none" : "inline-block";
             }
 
             function updateSummary() {
@@ -526,12 +604,14 @@
 
             showStep(currentStep);
 
-            document.getElementById("next-button").addEventListener("click", () => {
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    showStep(currentStep);
-                    updateSummary();
-                }
+            document.querySelectorAll("#next-button, #next-button-2, #next-button-3, #next-button-4, #next-button-5").forEach(button => {
+                button.addEventListener("click", () => {
+                    if (currentStep < totalSteps) {
+                        currentStep++;
+                        showStep(currentStep);
+                        updateSummary();
+                    }
+                });
             });
 
             document.getElementById("prev-button").addEventListener("click", () => {
@@ -548,7 +628,6 @@
                     document.getElementById("card-errors").textContent = error.message;
                 } else {
                     console.log("Token obtained:", token);
-                    // Add logic to send token to backend and complete the payment process
                     const response = await fetch('/process-payment', {
                         method: 'POST',
                         headers: {
@@ -556,7 +635,7 @@
                         },
                         body: JSON.stringify({
                             token: token.id,
-                            amount: Math.round(parseFloat(document.getElementById("total-due").innerText.replace('$', '')) * 100) // Convert to cents and round to nearest integer
+                            amount: Math.round(parseFloat(document.getElementById("total-due").innerText.replace('$', '')) * 100)
                         })
                     });
 
@@ -574,7 +653,6 @@
                 option.addEventListener("click", () => {
                     document.querySelectorAll(".vehicle-option").forEach((vehicle) => vehicle.classList.remove("selected"));
                     option.classList.add("selected");
-                    document.getElementById("next-button").disabled = false;
                     updateSummary();
                 });
             });
@@ -609,7 +687,6 @@
             }
         });
     </script>
-
 </body>
 
 </html>
